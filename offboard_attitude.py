@@ -23,6 +23,8 @@ from scipy import signal
 
 def multiple_tone_signal():
     """
+    PRECISA DE AJUSTES
+    ------------------
     Generates a multiple tone signal.
     Returns:
     interpolation_function (callable): A function that interpolates the multiple tone signal.
