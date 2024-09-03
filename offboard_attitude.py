@@ -18,19 +18,135 @@ from mavsdk import System
 from mavsdk.offboard import (Attitude, OffboardError)
 
 import numpy as np
+from scipy.interpolate import interp1d
+from scipy import signal
 
-C1 = 4.0
-C2 = 0.0187
-Trec = 13.0
-wmin = 0.4*2*np.pi # rad/s
-wmax = 6.0*2*np.pi # rad/s
-A = 0.2*180/np.pi
-t = np.linspace(0, 15, 1000) 
-dt = t[1]-t[0]  
-K = C2*(np.exp((C1*t)/Trec)-1)
-w = wmin + K*(wmax-wmin)
-theta = np.cumsum(w)*dt # integration of w(t) with respect to t
-delta_sweep = A*np.sin(theta)
+def multiple_tone_signal():
+    """
+    Generates a multiple tone signal.
+    Returns:
+    interpolation_function (callable): A function that interpolates the multiple tone signal.
+    """
+    t0 = 0.0
+    tf = 30.0
+    f1 = 0.001
+    f2 = 0.004
+    f3 = 0.3
+    f4 = 2.0
+    A = 0.2*180.0/np.pi
+    sample_rate = 1e-3
+    #
+    tempo = np.arange(t0, tf, sample_rate) 
+    sinal_tone = A*np.sin(2*np.pi*f1*tempo) + A*np.sin(2*np.pi*f2*tempo) + A*np.sin(2*np.pi*f3*tempo) + A*np.sin(2*np.pi*f4*tempo)
+    #
+    interpolation_function = interp1d(tempo, sinal_tone, kind='linear', fill_value="extrapolate")
+    return interpolation_function
+
+def thrust_adjustment(phi, theta, m, g):
+    """
+    This function adjusts the thrust to keep the drone in the air.
+    """
+    return m*g/(np.cos(phi*np.pi/180)*np.cos(theta*np.pi/180))
+
+def double_sawtooth_wave():
+    """
+    Generates a double sawtooth wave function.
+    Returns:
+    interpolation_function (callable): A function that interpolates the double sawtooth wave.
+    """
+    t0 = 0.0
+    tf = 30.0
+    Th = 2.0 # half period
+    f = 1/(2*Th)
+    A = 0.6*180.0/np.pi
+    sample_rate = 1e-3
+    #
+    tempo = np.arange(t0, tf, sample_rate) 
+    sinal_dente = A*signal.sawtooth(2*np.pi*f*tempo, 0.5)
+    #
+    interpolation_function = interp1d(tempo, sinal_dente, kind='linear', fill_value="extrapolate")
+    return interpolation_function
+
+def square_wave():
+    """
+    Generates a square wave signal.
+    Returns:
+        interpolation_function: A function that interpolates the square wave signal.
+    """
+    t0 = 0.0
+    tf = 30.0
+    Th = 2.0 # half period
+    f = 1/(2*Th)
+    A = 0.2*180.0/np.pi
+    sample_rate = 1e-3
+    #
+    tempo = np.arange(t0, tf, sample_rate) 
+    sinal_quadrado = A*np.sign(np.sin(2*np.pi*f*tempo))
+    #
+    interpolation_function = interp1d(tempo, sinal_quadrado, kind='linear', fill_value="extrapolate")
+    return interpolation_function
+
+def sweep_signal(t, C1, C2, Trec, wmin, wmax, A):
+    """
+    Generate a swept signal based on the given parameters.
+    Parameters:
+    t (array-like): Time values for the signal.
+    C1 (float): Constant parameter.
+    C2 (float): Constant parameter.
+    Trec (float): Recovery time constant.
+    wmin (float): Minimum frequency.
+    wmax (float): Maximum frequency.
+    A (float): Amplitude of the signal.
+    Returns:
+    array-like: The generated swept signal.
+    """
+    K = C2*(np.exp((C1*t)/Trec)-1)
+    w = wmin + K*(wmax-wmin)
+    dt=t[1]-t[0]
+    theta = np.cumsum(w)*dt # integration of w(t) with respect to t
+    delta_sweep = A*np.sin(theta)
+    return delta_sweep
+
+def signal_1():
+    """
+    This function generates an interpolation function for a sweep frequency signal.
+    """
+    #
+    C1 = 4.0 
+    C2 = 0.0187 
+    Trec = 13.0 
+    fmin = 0.01
+    wmin = 2*np.pi*fmin
+    fmax = 5.0 
+    wmax = 2*np.pi*fmax 
+    A = 0.2*180/np.pi
+    #
+    t0 = 0.0
+    tf = 15.0
+    Ta = 1/(10*fmax)
+    #
+    tempo = np.arange(t0, tf, Ta) 
+    delta_sweep = sweep_signal(tempo, C1, C2, Trec, wmin, wmax, A)
+    #
+    interpolation_function = interp1d(tempo, delta_sweep, kind='linear', fill_value="extrapolate")
+    return interpolation_function
+
+def signal_2():
+    """
+    This function generates an interpolation function for a tone signal.
+    """
+    t0 = 0.0
+    tf = 15.0
+    Ta = 1e-3 # 1 ms
+    tempo = np.arange(t0, tf, Ta) 
+    #
+    f0 = 1.0
+    w0 = 2*np.pi*f0
+    A = 0.2*180/np.pi
+    delta_tone = A*np.sin(w0*tempo)
+    #
+    interpolation_function = interp1d(tempo, delta_tone, kind='linear', fill_value="extrapolate")
+    return interpolation_function
 
 async def run():
     """ Does Offboard control using attitude commands. """
@@ -58,6 +174,14 @@ async def run():
 
     await asyncio.sleep(20) # 20 seconds
 
+
+# --- 
+    delta_tone = double_sawtooth_wave()
+    freq_sp = 50.0 # Hz
+    t_sp = 1/freq_sp    
+    t = 0.0
+    tf = 30.0
+
     print("-- Setting initial setpoint")
     await drone.offboard.set_attitude(Attitude(0.0, 0.0, 0.0, 0.0))
 
@@ -74,15 +198,24 @@ async def run():
     print("-- Go up at 50% thrust")
     await drone.offboard.set_attitude(Attitude(0.0, 0.0, 0.0, 0.5))
     await asyncio.sleep(2) # 2 seconds
-   
-    # --- 
-
+    
     print("-- Start sweep frequency signal at 50% thrust in roll")
-    for i in range(len(delta_sweep)):
-        await drone.offboard.set_attitude(Attitude(delta_sweep[i], 0.0, 0.0, 0.5))
-        await asyncio.sleep(dt)
-    await asyncio.sleep(1.0)
+    while t <= tf:
 
+        roll = float(delta_tone(t))
+        pitch = 0.0
+        yaw = 0.0 
+        
+        g = 9.81 # m/s^2
+        m = 0.051 # 0.5/9.81 = 0.051 kg
+        
+        thrust = thrust_adjustment(roll, pitch, m, g)
+
+        await drone.offboard.set_attitude(Attitude(roll, pitch, yaw, thrust))
+        t += t_sp
+
+        await asyncio.sleep(t_sp) # 1/freq_sp
+    await asyncio.sleep(1.0)
     # ---
 
     print("-- Hover at 50% thrust")
@@ -99,6 +232,24 @@ async def run():
     print("-- Returning to Launch")
     await drone.action.return_to_launch()
 
+async def main():
+    # Connect to the drone
+    drone = System()
+    await drone.connect(system_address="udp://:14540")
+
+    # Get the list of parameters
+    all_params = await drone.param.get_all_params()
+
+    # Iterate through all int parameters
+    for param in all_params.int_params:
+        print(f"{param.name}: {param.value}")
+
+    for param in all_params.float_params:
+        print(f"{param.name}: {param.value}")
+
 if __name__ == "__main__":
     # Run the asyncio loop
     asyncio.run(run())
+    #asyncio.run(main())
+
+    

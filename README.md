@@ -1,23 +1,35 @@
 # mavdsk-python
 Código MAVSDK-python para implementar identificação de sistemas em SITL (software in the Loop). O workflow é o seguinte:
 
-1. PX4 rodando em SITL `make px4_sitl none_iris` em WSL2 em Windows 11.
-2. PX4 listener rodando em MATLAB 2023 em Windows 11 seguindo as instruções de [https://github.com/dferruzzo/pixhawk-sil-connector.git](https://github.com/dferruzzo/pixhawk-sil-connector.git). O listener fornece o modelo do quadrirotor.
-3. O codigo MAVSDK-Python deste repositório roda em Ubuntu WSL2.
+1. PX4 rodando em SITL `make px4_sitl jmavsim` em WSL2 em Windows 11,
+2. O codigo MAVSDK-Python deste repositório roda em Ubuntu WSL2,
+3. São enviados comandos de atitude utilizando o modo `offboard`, para analizar a taxa de rolagem `p`. 
 
 ---
 
 **O que tem sido feito até o momento:**
 
-1. Gerar uma varredura de frequência (frequency sweep) controlando diretamente a atitude do veículo utlizando o modo Offboard do `MAVSDK`. Script `offboard_attitude.py`. No momento apenas tem sido testado o angulo `roll` e a taxa `p`.
+1. O script `offboard_attitude.py` tem vários sinais de de teste:
+    * Sinal dente-de-serra,
+    * Sinal quadrado (rico em harmônicos),
+    * Sinal triangular,
+    * Sinal de varredura de frequência (frequency sweep).
 
-2. Os dados produzidos e capturados no MATLAB são procesados para obter a resposta em frequencia.
+2. O sinal é enviado via `MAVlink`, para o PX4 em SITL.
 
-3. Para testar o script antes da coleta de dados utilizo `make px4_sitl jmavsim`. 
+3. Utilizando `QGroundControl` é obtido o arquivo de dados `ulg`.
+
+4. No Notebook `analise_resposta_em_freq.ipynb` é obtida a resposta em frequência.
+
+5. Os dados gerados de resposta em frequência são guardados em arquivos de texto (`txt`).
 
 ---
 
-**Desafios:**
+**To-Do:**
 
-1. Gerar a varredura de frequência utilizando o `ActuatorControl` do MAVSDK que age diretamente nos atuadores. Até o momento, sem sucesso. Script `offboard_actuator_control.py`.
-2. O uso direto dos atuadores é necessário para implementar um controlador (linear ou não-linear) de atitude do veículo.
+1. Fazer a identificação de sistemas a partir da resposta em frequência.
+2. Obter o modelo linear para as taxas;
+2. Testar o modelo.
+
+---
+

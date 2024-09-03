@@ -4,7 +4,9 @@
           The direct attitude interface is a low level interface to be used
           with caution. On real vehicles the thrust values are likely not
           adjusted properly and you need to close the loop using altitude.
- 
+
+    TODO: Ainda não está funcionando. O objetivo é fazer o drone seguir um
+    sinal de sweep frequency controlando os atuadores diretamente.
 """
 import asyncio
 
