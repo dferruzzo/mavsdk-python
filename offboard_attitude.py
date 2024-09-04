@@ -21,10 +21,11 @@ import numpy as np
 from scipy.interpolate import interp1d
 from scipy import signal
 
+# TODO: Implementar a função que gera o sinal de controle de atitude de uma frequência apenas.
+# TODO: Implementar uma função que determina o modulo e a fase de Bode para esse sinal.
+
 def multiple_tone_signal():
     """
-    PRECISA DE AJUSTES
-    ------------------
     Generates a multiple tone signal.
     Returns:
     interpolation_function (callable): A function that interpolates the multiple tone signal.
@@ -133,21 +134,25 @@ def signal_1():
     interpolation_function = interp1d(tempo, delta_sweep, kind='linear', fill_value="extrapolate")
     return interpolation_function
 
-def signal_2():
+def one_single_tone_signal(A, f0):
     """
-    This function generates an interpolation function for a tone signal.
+    Generates a one-tone signal.
+    Parameters:
+    - A (float): Amplitude of the signal in rad.
+    - f0 (float): Frequency of the signal in hertz.
+    Returns:
+    - interpolation_function (callable): Interpolation function that represents the one-tone signal.
+    This function generates a one-tone signal with the given amplitude and frequency. The signal is represented by an interpolation function that can be used to obtain the signal value at any given time.  
     """
     t0 = 0.0
-    tf = 15.0
-    Ta = 1e-3 # 1 ms
+    tf = 4*(1/f0) # 4 periods
+    Ta = 1/(100*f0) # 100 samples per period
+    
     tempo = np.arange(t0, tf, Ta) 
+    w0 = 2*np.pi*f0 # frequência angular in rad/seg
+    Agrad = A*180/np.pi # amplitude em graus
     #
-    f0 = 1.0
-    w0 = 2*np.pi*f0
-    A = 0.2*180/np.pi
-    delta_tone = A*np.sin(w0*tempo)
-    #
-    interpolation_function = interp1d(tempo, delta_tone, kind='linear', fill_value="extrapolate")
+    interpolation_function = interp1d(tempo, Agrad*np.sin(w0*tempo), kind='linear', fill_value="extrapolate")
     return interpolation_function
 
 async def run():
@@ -178,12 +183,21 @@ async def run():
 
 
 # --- 
-    delta_tone = double_sawtooth_wave()
+    # Selecione aqui a função que será utilizada para gerar o sinal de controle
+    # ---
+    # O sinal
+    A = 0.2 # amplitude em rad
+    f0 = 0.01 # frequência em Hz
+    delta_tone = one_single_tone_signal(A, f0)
+    # ---
+    # Frequencia de amostragem para o envio do sinal de controle
     freq_sp = 50.0 # Hz
     t_sp = 1/freq_sp    
+    # ---
+    # Duranção do sinal de controle
     t = 0.0
-    tf = 30.0
-
+    tf = 2*(1/f0) # 2 periods
+    # ---
     print("-- Setting initial setpoint")
     await drone.offboard.set_attitude(Attitude(0.0, 0.0, 0.0, 0.0))
 
@@ -209,7 +223,7 @@ async def run():
         yaw = 0.0 
         
         g = 9.81 # m/s^2
-        m = 0.051 # 0.5/9.81 = 0.051 kg
+        m = 0.050 # 0.5/9.81 = 0.051 kg
         
         thrust = thrust_adjustment(roll, pitch, m, g)
 
