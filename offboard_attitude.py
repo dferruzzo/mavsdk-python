@@ -21,9 +21,6 @@ import numpy as np
 from scipy.interpolate import interp1d
 from scipy import signal
 
-# TODO: Implementar a função que gera o sinal de controle de atitude de uma frequência apenas.
-# TODO: Implementar uma função que determina o modulo e a fase de Bode para esse sinal.
-
 def multiple_tone_signal():
     """
     Generates a multiple tone signal.
