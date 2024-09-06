@@ -123,3 +123,47 @@ def butter_lowpass_filter(data, cutoff, fs, order=5):
     b, a = butter_lowpass(cutoff, fs, order=order)
     y = lfilter(b, a, data)
     return y
+
+def rk4(f, x0, t0, tf, h):
+    # Implementa o algoritmo Runge-Kutta de 4ta ordem
+    # com passo de integração fixo.
+    # dotx = f(t,x)
+    # x0 = numpy.array([x1,...,xn]), vetor de dimensão n
+    # t0 : tempo inicial, escalar não negativo
+    # tf : tempo final, escalar não negativo
+    # h : passo de integração, é um escalar positivo
+    # as saídas são:
+    # t : o vetor tempo,
+    # x : o vetor de estados
+    #
+    from numpy import zeros, absolute, floor, minimum, abs, flip, fliplr, flipud
+    import warnings
+    #
+    N = absolute(floor((tf-t0)/h)).astype(int)
+    x = zeros((N+1, x0.size))
+    t = zeros(N+1)
+    x[0, :] = x0
+    # verification
+    if (tf < t0):
+        warnings.warn("Backwards integration requested", Warning)
+        h = -abs(h)
+        back_flag = True
+    else:
+        back_flag = False
+    if (tf == t0):
+        raise ValueError("t0 equals tf")
+    if (abs(tf-t0) <= abs(h)):
+        raise ValueError("Integration step h is too long")
+    t[0] = t0
+    for i in range(0, N):
+        k1 = f(t[i], x[i])
+        k2 = f(t[i]+h/2.0, x[i]+(h*k1)/2.0)
+        k3 = f(t[i]+h/2.0, x[i]+(h*k2)/2.0)
+        k4 = f(t[i]+h, x[i]+h*k3)
+        x[i+1, :] = x[i, :]+(h/6.0)*(k1+2.0*k2+2.0*k3+k4)
+        t[i+1] = t[i]+h
+    if back_flag == True:
+        t = flip(t)
+        x = flipud(x)
+    return t, x
+#
