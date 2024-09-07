@@ -23,13 +23,15 @@ Código MAVSDK-python para implementar identificação de sistemas em SITL (soft
 
 5. Os dados gerados de resposta em frequência são guardados em arquivos de texto (`txt`).
 
+6. No script `analise_resposta_em_freq.ipynb` é obtinda a resposta em frequência a partir dos dados anteriores.
+7. É proposto um modelo linear de primeira ordem $\dfrac{P(s)}{U(s)}=ke^{-\tau s}\left(\dfrac{Ts+1}{aTs+1}\right)\left(\frac{1}{I_{xx}s}\right)$, para a dinâmica da velocidade angular $p(t)$.
+
 ---
 
 **To-Do:**
 
-1. Fazer a identificação de sistemas a partir da resposta em frequência.
-2. Obter o modelo linear para as taxas;
-2. Testar o modelo.
+1. Ajustar os parâmetros do modelo.
+2. Validar o modelo.
 
 ---
 
