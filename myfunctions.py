@@ -76,6 +76,8 @@ Returns:
 from pyulog import ULog
 from scipy.signal import butter, lfilter
 from myfunctions import *
+import numpy as np
+import math
 
 def read_ulog(file_path):
     ulog = ULog(file_path)
@@ -167,3 +169,93 @@ def rk4(f, x0, t0, tf, h):
         x = flipud(x)
     return t, x
 #
+def dyn_p(w, Ixx):
+    '''
+    Dinâmica linear da taxa do ângulo de rolagem
+    w : frequência angular em rad/s
+    Ixx : momento de inércia em kg.m^2
+    
+    Retorna a função de transferência
+    '''
+    s = complex(0,w)
+    return 1 / (Ixx*s)
+
+def delay_p(w, tau):
+    """
+    Calculates the delay transfer function for a given frequency and time constant.
+    Parameters:
+    - w (float): The frequency value in rad/s.
+    - tau (float): The time constant value in seconds.
+    Returns:
+    - complex: The complex exponential value representing the delay transfer function.
+    """
+    s = complex(0,w)
+    return np.exp(-tau*s)
+
+def compensador(w, a, T, k):
+    """
+    Calculates the compensator transfer function.
+    Parameters:
+    w (float): Frequency value in rad/s.
+    a (float): Coefficient value.
+    T (float): Time constant value.
+    k (float): Gain value.
+    Returns:
+    complex: The transfer function of the compensator.
+    """
+    s = complex(0,w)
+    return k*(T*s + 1)/(a*T*s + 1)
+
+def G(w, Ixx, tau, a, T, k):
+    """
+    Calculates the transfer function G(s) given the parameters.
+    Parameters:
+    w (float): The frequency value in rad/s.
+    Ixx (float): The moment of inertia value.
+    tau (float): The time delay value in seconds.
+    a (float): The coefficient value.
+    T (float): The time constant value.
+    k (float): The gain value.
+    Returns:
+    complex: The value of G(s) at the given frequency.
+    """
+    return dyn_p(w, Ixx)*delay_p(w, tau)*compensador(w, a ,T, k)    
+
+def G_bode(w, G):
+    """
+    Calculates the magnitude (in dB) and phase (in degrees) of a transfer function G at given frequencies.
+
+    Parameters:
+    w (array-like): Array of frequencies in rad/s at which to evaluate the transfer function.
+    G (callable): Transfer function G(w) that takes a frequency w as input and returns a complex value.
+
+    Returns:
+    mod_G_dB (array-like): Array of magnitudes of G(w) in decibels.
+    G_fase (array-like): Array of phases of G(w) in degrees.
+    """
+    mod_G_dB = np.zeros(len(w))
+    G_fase = np.zeros(len(w))
+    for i in range(len(w)):
+        mod_G_dB[i] = 20*np.log10(abs(G(w[i])))
+        G_fase[i] = np.angle(G(w[i]))*180/np.pi
+    return mod_G_dB, np.unwrap(G_fase)
+    
+def calcula_param_comp_avan(fm, Gc, phim):
+    """
+    Calculates the advance compensator parameters a, T, and k based on the 
+    given inputs.
+    Parameters:
+    fm (float): The frequency in Hz.
+    Gc (float): The gain in dB.
+    phim (float): The phase in degrees.
+    Returns:
+    tuple: A tuple containing the calculated values of a, T, and k.
+        - a (float): The calculated value of a.
+        - T (float): The calculated value of T.
+        - k (float): The calculated value of k.
+    """
+    
+    a = (1-np.sin(phim*np.pi/180))/(1+np.sin(phim*np.pi/180))
+    T = 1/(fm*2*np.pi*np.sqrt(a))
+    k = math.pow(10,Gc/20)*np.sqrt(a)
+    return a, T, k
