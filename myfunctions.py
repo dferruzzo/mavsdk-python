@@ -206,7 +206,7 @@ def compensador(w, a, T, k):
     s = complex(0,w)
     return k*(T*s + 1)/(a*T*s + 1)
 
-def G(w, Ixx, tau, a, T, k):
+def G(w, Ixx, tau, alpha, T, k):
     """
     Calculates the transfer function G(s) given the parameters.
     Parameters:
@@ -219,7 +219,7 @@ def G(w, Ixx, tau, a, T, k):
     Returns:
     complex: The value of G(s) at the given frequency.
     """
-    return dyn_p(w, Ixx)*delay_p(w, tau)*compensador(w, a ,T, k)    
+    return dyn_p(w, Ixx)*delay_p(w, tau)*compensador(w, alpha ,T, k)    
 
 def G_bode(w, G):
     """
