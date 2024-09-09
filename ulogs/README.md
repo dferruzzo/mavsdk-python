@@ -1,0 +1,2 @@
+* `log_0_2024-9-2-17-20-09.ulg` contem dados de entrada de sinal quadrado aplicado à rolagem $\phi(t)$, é obtido a velocidade angular $p(t)$.
+* `log_1_2024-9-3-07-56-31.ulg` contem dados de entrada de sinal dente de serra aplicado à rolagem $\phi(t)$, é obtido a velocidade angular $p(t)$.
