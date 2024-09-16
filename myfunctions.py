@@ -78,6 +78,265 @@ from scipy.signal import butter, lfilter
 from myfunctions import *
 import numpy as np
 import math
+from scipy.spatial.transform import Rotation as R
+import matplotlib.pyplot as plt
+import numpy as np
+
+# Dicionário de nomes dos modos de voo para um multicopter
+flight_mode_names_multicopter = {
+    0: 'Manual',
+    1: 'Altitude',
+    2: 'Position',
+    3: 'Auto: Mission',
+    4: 'Auto: Loiter',
+    5: 'Auto: RTL',
+    6: 'Acro',
+    7: 'Stabilized',
+    8: 'Rattitude',
+    9: 'Auto: Takeoff',
+    10: 'Auto: Land',
+    11: 'Auto: Follow Target',
+    12: 'Auto: Precision Land',
+    13: 'Auto: VTOL Takeoff',
+    14: 'Auto: VTOL Land',
+    15: 'Auto: VTOL Transition to FW',
+    16: 'Auto: VTOL Transition to MC',
+    17: 'Offboard'
+}
+
+def plot3x1(x1, y1, y1_label, x2, y2, y2_label, x3, y3, y3_label):
+    """
+    Plots three subplots in a single figure, each with its own x and y data.
+    Parameters:
+    x1 (array-like): Data for the x-axis of the first subplot.
+    y1 (array-like): Data for the y-axis of the first subplot.
+    y1_label (str): Label for the y-axis data of the first subplot.
+    x2 (array-like): Data for the x-axis of the second subplot.
+    y2 (array-like): Data for the y-axis of the second subplot.
+    y2_label (str): Label for the y-axis data of the second subplot.
+    x3 (array-like): Data for the x-axis of the third subplot.
+    y3 (array-like): Data for the y-axis of the third subplot.
+    y3_label (str): Label for the y-axis data of the third subplot.
+    Returns:
+    None
+    This function creates a figure with three subplots arranged vertically.
+    Each subplot shares the same x-axis (time in seconds) but has different y-axis data.
+    The function also adds labels, legends, and grids to each subplot for better visualization.
+    """
+    
+    # Criar uma figura com 3 subplots (3 linhas, 1 coluna)
+    fig, axs = plt.subplots(3, 1, figsize=(9, 6))
+
+    # Plotar os ângulos de Euler ao longo do tempo
+    axs[0].plot(x1, y1, label=y1_label)
+    axs[0].set_xticklabels([])
+    axs[0].legend()
+    axs[0].grid(True)
+
+    # Plotar os comandos de controle ao longo do tempo
+    axs[1].plot(x2, y2, label=y2_label)
+    axs[1].set_xticklabels([])
+    axs[1].legend()
+    axs[1].grid(True)
+
+    # Plotar as taxas de rotação ao longo do tempo
+    axs[2].plot(x3, y3, label=y3_label)
+    axs[2].set_xlabel('Time (segundos)')
+    axs[2].legend()
+    axs[2].grid(True)
+
+    # Ajustar o layout para evitar sobreposição
+    plt.tight_layout()
+    plt.show()
+    
+def get_euler_taxa(file_path = 'ulogs/log_13_2024-9-16-08-21-12.ulg', angle='roll', taxa='p', sinal=[1,-1,-1,1]):
+    """
+    Process and plot Euler angles and control signals from a ULog file.
+    This function reads a ULog file, extracts relevant flight data, processes
+    quaternion attitudes into Euler angles, and generates control signals. It
+    then plots the Euler angles, rotation rates, and control signals.
+    Parameters:
+    file_path (str): Path to the ULog file. Default is 'ulogs/log_13_2024-9-16-08-21-12.ulg'.
+    angle (str): The Euler angle to extract ('roll', 'pitch', 'yaw'). Default is 'roll'.
+    taxa (str): The rotation rate to extract ('p', 'q', 'r'). Default is 'p'.
+    sinal (list): List of coefficients to generate the control signal. Default is [1, -1, -1, 1].
+    Returns:
+    tuple: Contains the following elements:
+        - timestamps_clipped (list): Timestamps for the Euler angles.
+        - roll (list): Extracted Euler angles.
+        - timestamps_taxas_clipped (list): Timestamps for the rotation rates.
+        - p_clipped (list): Extracted rotation rates.
+        - timestamps_cont_clipped (list): Timestamps for the control signals.
+        - control_roll (list): Generated control signals.
+    """
+    
+    # Ler o arquivo .ulg
+    ulog = read_ulog(file_path)
+
+    # obtem os timestamps e os modos de voo
+    change_timestamps, change_modes = get_flight_mode_changes(ulog)
+
+    # obtem o timestamps do offboard e do rtl
+    mode_timestamps = get_mode_timestamps(change_timestamps, change_modes)
+
+    # coleta a atitude do veiculo em quaternios
+    timestamps, q_d0, q_d1, q_d2, q_d3 = coleta_quaternion_atitude(ulog)
+
+    # coleta os comandos de controle do veículo
+    timestamps_cont, control0, control1, control2, control3 = coleta_controles(ulog)
+
+    # Coletar os dados das taxas de rotação
+    timestamps_taxas, p = coleta_taxas_rotacao(ulog, taxa=taxa)
+
+    # recorta os dados
+    timestamps_clipped, q_d0_clipped = recorta_dados(timestamps, q_d0, mode_timestamps)
+    _, q_d1_clipped = recorta_dados(timestamps, q_d1, mode_timestamps)
+    _, q_d2_clipped = recorta_dados(timestamps, q_d2, mode_timestamps)
+    _, q_d3_clipped = recorta_dados(timestamps, q_d3, mode_timestamps)
+
+    # Quaternions to Euler Angles
+    roll = get_euler_angles_from_quat(q_d0_clipped, q_d1_clipped, q_d2_clipped, q_d3_clipped, angle=angle)
+
+    #
+    timestamps_cont_clipped, control0_clipped = recorta_dados(timestamps_cont, control0, mode_timestamps)
+    _, control1_clipped = recorta_dados(timestamps_cont, control1, mode_timestamps)
+    _, control2_clipped = recorta_dados(timestamps_cont, control2, mode_timestamps)
+    _, control3_clipped = recorta_dados(timestamps_cont, control3, mode_timestamps)
+
+    # gerar o sinal de controle de roll
+    control_roll = sinal[0]*control0_clipped + sinal[1]*control1_clipped + sinal[2]*control2_clipped + sinal[3]*control3_clipped
+
+    # Recortar os dados das taxas de rotação
+    timestamps_taxas_clipped, p_clipped = recorta_dados(timestamps_taxas, p, mode_timestamps)
+    
+    plot3x1(x1=timestamps_clipped, y1=roll, y1_label=angle, x2=timestamps_taxas_clipped, y2=p_clipped, y2_label=taxa, x3=timestamps_cont_clipped, y3=control_roll, y3_label='control')
+    
+    return timestamps_clipped, roll, timestamps_taxas_clipped, p_clipped, timestamps_cont_clipped, control_roll  
+
+def coleta_taxas_rotacao(ulog, taxa='p'):
+    if taxa == 'p':
+        timestamps, p = get_ulog_data(ulog, 'vehicle_angular_velocity', 'xyz[0]')
+        return timestamps, p
+    elif taxa == 'q':
+        timestamps, q = get_ulog_data(ulog, 'vehicle_angular_velocity', 'xyz[1]')
+        return timestamps, q
+    elif taxa == 'r':
+        timestamps, r = get_ulog_data(ulog, 'vehicle_angular_velocity', 'xyz[2]')
+        return timestamps, r
+    else:
+        raise ValueError('A taxa deve ser "p", "q" ou "r".')
+    return taxa
+
+def get_euler_angles_from_quat(q_d0, q_d1, q_d2, q_d3, angle='roll'):
+    # Converter todos os quaternions para ângulos de Euler
+    euler_angles = np.array([quaternion_to_euler(q0, q1, q2, q3) for q0, q1, q2, q3 in zip(q_d0, q_d1, q_d2, q_d3)])
+    if angle == 'roll':
+        return euler_angles[:, 0]
+    elif angle == 'pitch':
+        return euler_angles[:, 1]
+    elif angle == 'yaw':
+        return euler_angles[:, 2]
+    else:
+        raise ValueError('O ângulo deve ser "roll", "pitch" ou "yaw".')
+    return angle
+
+def coleta_controles(ulog):
+    timestamps, control0 = get_ulog_data(ulog, 'actuator_motors', 'control[0]')
+    _, control1 = get_ulog_data(ulog, 'actuator_motors', 'control[1]')
+    _, control2 = get_ulog_data(ulog, 'actuator_motors', 'control[2]')
+    _, control3 = get_ulog_data(ulog, 'actuator_motors', 'control[3]')
+    return timestamps, control0, control1, control2, control3
+
+def recorta_dados(timestamps, q_d0, mode_timestamps):
+    """
+    Recorta os vetores de timestamps e q_d0 com início no instante Offboard e final no instante RTL.
+
+    :param timestamps: numpy.ndarray, vetor de timestamps
+    :param q_d0: numpy.ndarray, vetor de quaternions q_d0
+    :param mode_timestamps: dict, dicionário com os timestamps dos modos de voo
+    :return: tuple, vetores recortados de timestamps e q_d0
+    """
+    offboard_time = mode_timestamps['Offboard'][0]
+    rtl_time = mode_timestamps['RTL'][0]
+
+    # Encontrar os índices correspondentes aos tempos de Offboard e RTL
+    start_index = np.searchsorted(timestamps, offboard_time, side='left')
+    end_index = np.searchsorted(timestamps, rtl_time, side='right')
+
+    # Recortar os vetores
+    recortados_timestamps = timestamps[start_index:end_index]
+    recortados_q_d0 = q_d0[start_index:end_index]
+
+    return recortados_timestamps, recortados_q_d0
+
+# coletar dados do sinal de entrada
+def coleta_quaternion_atitude(ulog):
+    timestamps, q_d0 = get_ulog_data(ulog, 'vehicle_attitude_setpoint', 'q_d[0]')
+    _, q_d1 = get_ulog_data(ulog, 'vehicle_attitude_setpoint', 'q_d[1]')
+    _, q_d2 = get_ulog_data(ulog, 'vehicle_attitude_setpoint', 'q_d[2]')
+    _, q_d3 = get_ulog_data(ulog, 'vehicle_attitude_setpoint', 'q_d[3]')
+    return timestamps, q_d0, q_d1, q_d2, q_d3
+
+def get_mode_timestamps(change_timestamps, change_modes, mode_offboard=14, mode_rtl=5):
+    """
+    Retorna os timestamps quando os modos Offboard e RTL começam.
+
+    Parameters:
+    change_timestamps (numpy.ndarray): Array de timestamps das mudanças de modo.
+    change_modes (numpy.ndarray): Array de modos correspondentes aos timestamps.
+    mode_offboard (int): Código do modo Offboard. Default é 14.
+    mode_rtl (int): Código do modo RTL. Default é 5.
+
+    Returns:
+    dict: Dicionário com os timestamps dos modos Offboard e RTL.
+    """
+    offboard_timestamps = change_timestamps[change_modes == mode_offboard]
+    rtl_timestamps = change_timestamps[change_modes == mode_rtl]
+    
+    return {
+        'Offboard': offboard_timestamps,
+        'RTL': rtl_timestamps
+    }
+
+def get_flight_mode_changes(ulog, topic_name='vehicle_status', field_name='nav_state_user_intention'):
+    """
+    Função para obter os instantes nos quais os modos de voo mudam e imprimir os nomes dos modos de voo.
+    
+    Parâmetros:
+    ulog: objeto ULog
+    topic_name: nome do tópico que contém o estado de navegação (default: 'vehicle_status')
+    field_name: nome do campo que contém o estado de navegação (default: 'nav_state')
+    
+    Retorna:
+    timestamps: lista de instantes nos quais os modos de voo mudam
+    flight_modes: lista dos modos de voo correspondentes aos instantes
+    """
+
+    # Coletar dados do tópico
+    timestamps, flight_modes = get_ulog_data(ulog, topic_name, field_name)
+    
+    # Identificar mudanças nos modos de voo
+    changes = np.where(np.diff(flight_modes) != 0)[0] + 1
+    
+    # Obter os instantes e modos de voo correspondentes às mudanças
+    change_timestamps = timestamps[changes]
+    change_modes = flight_modes[changes]
+    
+    return change_timestamps, change_modes
+
+def quaternion_to_euler(q0, q1, q2, q3):
+    """
+    Converte um quaternion em ângulos de Euler.
+    
+    Parâmetros:
+    q0, q1, q2, q3: Componentes do quaternion
+    
+    Retorna:
+    roll, pitch, yaw: Ângulos de Euler em radianos
+    """
+    r = R.from_quat([q1, q2, q3, q0])  # scipy usa a ordem [x, y, z, w]
+    euler = r.as_euler('xyz', degrees=False)
+    return euler
 
 def read_ulog(file_path):
     ulog = ULog(file_path)

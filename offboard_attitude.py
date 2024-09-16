@@ -176,16 +176,18 @@ async def run():
     print("-- Taking off")
     await drone.action.takeoff()
 
-    await asyncio.sleep(20) # 20 seconds
+    await asyncio.sleep(10) # 20 seconds
 
 
 # --- 
     # Selecione aqui a função que será utilizada para gerar o sinal de controle
     # ---
     # O sinal
-    A = 0.2 # amplitude em rad
-    f0 = 0.01 # frequência em Hz
-    delta_tone = one_single_tone_signal(A, f0)
+    #A = 0.2 # amplitude em rad
+    #f0 = 0.01 # frequência em Hz
+    #delta_tone = one_single_tone_signal(A, f0)
+    delta_tone = square_wave()
+    
     # ---
     # Frequencia de amostragem para o envio do sinal de controle
     freq_sp = 50.0 # Hz
@@ -193,10 +195,16 @@ async def run():
     # ---
     # Duranção do sinal de controle
     t = 0.0
-    tf = 2*(1/f0) # 2 periods
+    tf = 10 # seg #2*(1/f0) # 2 periods
     # ---
+    
+    roll = 0.0
+    pitch = 0.0
+    yaw = 1.55*180/np.pi # em graus
+    thrust = 0.73 # N
+    
     print("-- Setting initial setpoint")
-    await drone.offboard.set_attitude(Attitude(0.0, 0.0, 0.0, 0.0))
+    await drone.offboard.set_attitude(Attitude(roll, pitch, yaw, thrust))
 
     print("-- Starting offboard")
     try:
@@ -208,19 +216,16 @@ async def run():
         await drone.action.disarm()
         return
       
-    print("-- Go up at 50% thrust")
-    await drone.offboard.set_attitude(Attitude(0.0, 0.0, 0.0, 0.5))
-    await asyncio.sleep(2) # 2 seconds
+    print("-- Go up at ", thrust*100,"% thrust")
+    await drone.offboard.set_attitude(Attitude(roll, pitch, yaw, thrust))
+    await asyncio.sleep(5) # 2 seconds
     
     print("-- Start sweep frequency signal at 50% thrust in roll")
     while t <= tf:
 
-        roll = float(delta_tone(t))
-        pitch = 0.0
-        yaw = 0.0 
-        
+        roll = float(delta_tone(t))      
         g = 9.81 # m/s^2
-        m = 0.050 # 0.5/9.81 = 0.051 kg
+        m = 0.73/g # 0.5/9.81 = 0.051 kg # thrust = 0.73 N
         
         thrust = thrust_adjustment(roll, pitch, m, g)
 
@@ -232,7 +237,7 @@ async def run():
     # ---
 
     print("-- Hover at 50% thrust")
-    await drone.offboard.set_attitude(Attitude(0.0, 0.0, 0.0, 0.5))
+    await drone.offboard.set_attitude(Attitude(roll, pitch, yaw, thrust))
     await asyncio.sleep(2)
 
     print("-- Stopping offboard")
