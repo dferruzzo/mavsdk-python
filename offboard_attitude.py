@@ -10,6 +10,14 @@
  need a very fast reaction to control the drone. For a more user-friendly 
  interface that allows to set position and velocity setpoints, please refer 
  to the offboard position control example.  
+ 
+ 
+ VERIFICAR QUE O SYSTEM IDENTIFICATION FLAG ESTÁ ATIVO NO PX4 VIA QGROUDCONTROL.
+ 
+ Param: SDLOG_PROFILE=57
+ 
+ Isso aumenta a taxa de amostragem dos dados.
+
 
 """
 import asyncio
