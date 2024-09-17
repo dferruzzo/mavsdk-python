@@ -80,7 +80,6 @@ import numpy as np
 import math
 from scipy.spatial.transform import Rotation as R
 import matplotlib.pyplot as plt
-import numpy as np
 
 # Dicionário de nomes dos modos de voo para um multicopter
 flight_mode_names_multicopter = {
@@ -103,6 +102,35 @@ flight_mode_names_multicopter = {
     16: 'Auto: VTOL Transition to MC',
     17: 'Offboard'
 }
+
+def fft_one_sided(t, y, plot=False, label='Magnitude'):
+    """
+    Compute the one-sided Fast Fourier Transform (FFT) of a signal.
+    Parameters:
+    t (array-like): Time array.
+    y (array-like): Signal array corresponding to the time array `t`.
+    Returns:
+    tuple: A tuple containing:
+        - freq_one_sided (array-like): One-sided frequency array.
+        - fft_y_one_sided (array-like): One-sided FFT of the signal `y`.
+    """
+    dt = t[1] - t[0]
+    fft_y = np.fft.fft(y)
+    freq = np.fft.fftfreq(len(y), dt)
+    fft_y_one_sided = fft_y[:len(fft_y)//2]
+    freq_one_sided = freq[:len(freq)//2]
+    
+    if plot:
+        plt.figure(figsize=(10, 5))
+        plt.plot(freq_one_sided, np.abs(fft_y_one_sided), label=label)
+        plt.xlabel('Frequency (Hz)')
+        plt.ylabel('Magnitude')
+        plt.title('One-Sided FFT')
+        plt.legend()
+        plt.grid()
+        plt.show()
+        
+    return freq_one_sided, fft_y_one_sided
 
 def plot3x1(x1, y1, y1_label, x2, y2, y2_label, x3, y3, y3_label):
     """
