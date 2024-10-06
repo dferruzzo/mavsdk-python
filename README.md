@@ -1,15 +1,21 @@
 # mavdsk-python
 Código MAVSDK-python para implementar identificação de sistemas em SITL (software in the Loop). O workflow é o seguinte:
 
-1. PX4 rodando em SITL `make px4_sitl jmavsim` em WSL2 em Windows 11,
-2. O codigo MAVSDK-Python deste repositório roda em Ubuntu WSL2,
+1. PX4 rodando em SITL `make px4_sitl gazebo-classic`, testado em:
+   * WSL2 em Windows 11,
+   * Debian 12 using `px4io/px4-dev-ros-noetic:latest` docker image. Run the `PX4-docker.sh` script,
+2. O codigo MAVSDK-Python deste repositório roda em Python `venv`:
+   * `python3 -m venv venv`, a primeira vez,
+   * `source venv/bin/activate`, para ativar o virtual environment,
+   * `pip install -r requirements.txt`, a primeira vez.
+   * `deactivate` para encerrar o `venv`.
 3. São enviados comandos de atitude utilizando o modo `offboard`, para analizar as dinâmicas das velocidades angulares $p(t)$, $q(t)$ e $r(t)$. 
 
 ---
 
 **O que tem sido feito até o momento:**
 
-1. O script `offboard_attitude.py` tem vários sinais de de teste:
+1. O script `offboard_attitude.py` produz vários sinais de de teste:
     * Sinal dente-de-serra,
     * Sinal quadrado (rico em harmônicos),
     * Sinal triangular,
