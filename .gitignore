@@ -2,3 +2,7 @@
 _pycache_/
 *.pyc
 venv/
+.env
+/docker-compose-backup.ymlbackup
+/create_nonroot_user.sh
+/docker-compose.yml

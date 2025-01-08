@@ -370,6 +370,16 @@ def read_ulog(file_path):
     ulog = ULog(file_path)
     return ulog
 
+def list_topics(ulog):
+    for dataset in ulog.data_list:
+        print(dataset.name)
+
+def list_fields(ulog, topic_name):
+    dataset = ulog.get_dataset(topic_name)
+    for field_name in dataset.data.keys():
+        if field_name != 'timestamp':  # Ignorar o campo de timestamp
+            print(field_name)
+
 # Função para listar todos os field_data de um arquivo .ulg
 def list_all_fields(ulog):
     for dataset in ulog.data_list:

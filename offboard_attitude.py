@@ -139,7 +139,7 @@ def signal_1():
     interpolation_function = interp1d(tempo, delta_sweep, kind='linear', fill_value="extrapolate")
     return interpolation_function
 
-def one_single_tone_signal(A, f0):
+def one_single_tone_signal(A, f0, N):
     """
     Generates a one-tone signal.
     Parameters:
@@ -150,7 +150,7 @@ def one_single_tone_signal(A, f0):
     This function generates a one-tone signal with the given amplitude and frequency. The signal is represented by an interpolation function that can be used to obtain the signal value at any given time.  
     """
     t0 = 0.0
-    tf = 4*(1/f0) # 4 periods
+    tf = N*(1/f0) # 4 periods
     Ta = 1/(100*f0) # 100 samples per period
     
     tempo = np.arange(t0, tf, Ta) 
@@ -187,14 +187,17 @@ async def run():
     await asyncio.sleep(10) # 20 seconds
 
 
-# --- 
+    # --- 
     # Selecione aqui a função que será utilizada para gerar o sinal de controle
     # ---
     # O sinal
-    #A = 0.2 # amplitude em rad
+    A = 0.8 # amplitude em rad
+    w0 = 1.6
+    f0 = w0/(2*np.pi)
+    N = 4 # num de periodos
     #f0 = 0.01 # frequência em Hz
-    #delta_tone = one_single_tone_signal(A, f0)
-    delta_tone = square_wave()
+    delta_tone = one_single_tone_signal(A, f0, N)
+    #delta_tone = square_wave()
     
     # ---
     # Frequencia de amostragem para o envio do sinal de controle
@@ -203,7 +206,7 @@ async def run():
     # ---
     # Duranção do sinal de controle
     t = 0.0
-    tf = 10 # seg #2*(1/f0) # 2 periods
+    tf = N/f0 # tempo de duração do teste
     # ---
     
     roll = 0.0
@@ -224,36 +227,37 @@ async def run():
         await drone.action.disarm()
         return
       
-    print("-- Go up at ", thrust*100,"% thrust")
+    print("-- Go up at ", thrust*100, "% thrust")
     await drone.offboard.set_attitude(Attitude(roll, pitch, yaw, thrust))
     await asyncio.sleep(5) # 2 seconds
     
-    print("-- Start sweep frequency signal at 50% thrust in roll")
+    print("-- Start sweep frequency signal at", thrust*100, "% thrust in roll")
     while t <= tf:
 
         roll = float(delta_tone(t))      
         g = 9.81 # m/s^2
-        m = 0.73/g # 0.5/9.81 = 0.051 kg # thrust = 0.73 N
+        m = 0.71/g # 0.5/9.81 = 0.051 kg # thrust = 0.73 N
         
         thrust = thrust_adjustment(roll, pitch, m, g)
+        print("Thrust=", thrust*100, "% thrust")
 
         await drone.offboard.set_attitude(Attitude(roll, pitch, yaw, thrust))
         t += t_sp
 
         await asyncio.sleep(t_sp) # 1/freq_sp
-    await asyncio.sleep(1.0)
+    #await asyncio.sleep(1.0)
     # ---
 
-    print("-- Hover at 50% thrust")
-    await drone.offboard.set_attitude(Attitude(roll, pitch, yaw, thrust))
-    await asyncio.sleep(2)
+    #print("-- Hover at ", thrust*100,"% thrust")
+    #await drone.offboard.set_attitude(Attitude(roll, pitch, yaw, thrust))
+    #await asyncio.sleep(1)
 
     print("-- Stopping offboard")
     try:
         await drone.offboard.stop()
     except OffboardError as error:
         print(f"Stopping offboard mode failed with error code: \
-              {error._result.result}")
+            {error._result.result}")
 
     print("-- Returning to Launch")
     await drone.action.return_to_launch()
