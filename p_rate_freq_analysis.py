@@ -429,7 +429,7 @@ def main ():
         ['ulogs/log_0_2025-1-7-11-27-03.ulg', 0.2, 20*0.2/(2*np.pi), 15*0.2/(2*np.pi)],
         ['ulogs/log_0_2025-1-7-11-34-39.ulg', 0.4, 15*0.4/(2*np.pi), 15*0.4/(2*np.pi)],
         ['ulogs/log_1_2025-1-7-11-39-49.ulg', 0.8, 15*0.8/(2*np.pi), 15*0.8/(2*np.pi)],
-        #['ulogs/log_3_2025-1-7-11-46-35.ulg', 1.6, 2*1.6/(2*np.pi), 15*1.6/(2*np.pi)] # coletar dados novamente, com amplitude maior.
+        #['ulogs/log_3_2025-1-7-11-46-35.ulg', 1.6, 2*1.6/(2*np.pi), 15*1.6/(2*np.pi)], # need to collect again with higher amplitud
     ]
 
     ganho_p_dB = []
