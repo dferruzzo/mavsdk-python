@@ -74,7 +74,7 @@ Returns:
     numpy.ndarray: The filtered data.
 """
 from pyulog import ULog
-from scipy.signal import butter, lfilter
+from scipy.signal import butter, lfilter, filtfilt
 from myfunctions import *
 import numpy as np
 import math
@@ -352,6 +352,32 @@ def get_flight_mode_changes(ulog, topic_name='vehicle_status', field_name='nav_s
     
     return change_timestamps, change_modes
 
+def offboard_time_analysis(ulog):
+    """
+    Analyzes the offboard control mode activation and deactivation times from the ulog data.
+    Parameters:
+    ulog (object): The ulog object containing the flight log data.
+    Returns:
+    tuple: A tuple containing:
+        - offboard_flag_up_time (numpy.ndarray): Timestamps when the offboard mode was activated.
+        - offboard_flag_down_time (numpy.ndarray): Timestamps when the offboard mode was deactivated.
+        - offboard_flag_timestamp (numpy.ndarray): All timestamps corresponding to the offboard flag data.
+        - offboard_flag_data (numpy.ndarray): The offboard flag data indicating whether the offboard mode is enabled.
+    """
+    # vehicle_control_mode
+    offboard_flag = get_ulog_data(ulog, 'vehicle_control_mode', 'flag_control_offboard_enabled')
+    offboard_flag_timestamp = offboard_flag[0]
+    offboard_flag_data = offboard_flag[1]
+    # Calcula a derivada do offboard_flag_data
+    offboard_flag_diff = np.diff(offboard_flag_data)
+    # Encontra os indices onde o offboard_flag_data muda
+    offboard_flag_up_index = np.where(offboard_flag_diff==1)
+    offboard_flag_down_index = np.where(offboard_flag_diff==-1)
+    # Tempo em que o offboard mode foi ativado e desativado
+    offboard_flag_up_time = offboard_flag_timestamp[offboard_flag_up_index]
+    offboard_flag_down_time = offboard_flag_timestamp[offboard_flag_down_index]
+    return offboard_flag_up_time, offboard_flag_down_time, offboard_flag_timestamp, offboard_flag_data
+
 def quaternion_to_euler(q0, q1, q2, q3):
     """
     Converte um quaternion em ângulos de Euler.
@@ -412,6 +438,37 @@ def get_ulog_data(ulog, topic_name, field_name):
     return timestamps, field_data
 
 # Filtros
+def butter_bandpass(lowcut, highcut, fs, order=5):
+    """
+    Cria um filtro Butterworth passa-faixa.
+
+    :param lowcut: Frequência de corte inferior (Hz).
+    :param highcut: Frequência de corte superior (Hz).
+    :param fs: Frequência de amostragem (Hz).
+    :param order: Ordem do filtro.
+    :return: Coeficientes do filtro (b, a).
+    """
+    nyquist = fs / 2.0  # Frequência de Nyquist
+    low = lowcut / nyquist
+    high = highcut / nyquist
+    b, a = butter(order, [low, high], btype='band')
+    return b, a
+
+def butter_bandpass_filter(data, lowcut, highcut, fs, order=5):
+    """
+    Aplica um filtro Butterworth passa-faixa a um sinal.
+
+    :param data: Sinal de entrada.
+    :param lowcut: Frequência de corte inferior (Hz).
+    :param highcut: Frequência de corte superior (Hz).
+    :param fs: Frequência de amostragem (Hz).
+    :param order: Ordem do filtro.
+    :return: Sinal filtrado.
+    """
+    b, a = butter_bandpass(lowcut, highcut, fs, order=order)
+    y = filtfilt(b, a, data)  # Filtragem bidirecional para evitar atraso de fase
+    return y
+
 def butter_lowpass(cutoff, fs, order=5):
     nyquist = 0.5 * fs
     normal_cutoff = cutoff / nyquist

@@ -94,25 +94,25 @@ def square_wave():
     interpolation_function = interp1d(tempo, sinal_quadrado, kind='linear', fill_value="extrapolate")
     return interpolation_function
 
-def sweep_signal(t, C1, C2, Trec, wmin, wmax, A):
+def sweep_signal(t, c1, c2, trec, wmin, wmax, a):
     """
     Generate a swept signal based on the given parameters.
     Parameters:
     t (array-like): Time values for the signal.
-    C1 (float): Constant parameter.
-    C2 (float): Constant parameter.
-    Trec (float): Recovery time constant.
+    c1 (float): Constant parameter.
+    c2 (float): Constant parameter.
+    trec (float): Recovery time constant.
     wmin (float): Minimum frequency.
     wmax (float): Maximum frequency.
-    A (float): Amplitude of the signal.
+    a (float): Amplitude of the signal.
     Returns:
     array-like: The generated swept signal.
     """
-    K = C2*(np.exp((C1*t)/Trec)-1)
-    w = wmin + K*(wmax-wmin)
+    k = c2*(np.exp((c1 * t) / trec) - 1)
+    w = wmin + k*(wmax-wmin)
     dt=t[1]-t[0]
     theta = np.cumsum(w)*dt # integration of w(t) with respect to t
-    delta_sweep = A*np.sin(theta)
+    delta_sweep = a*np.sin(theta)
     return delta_sweep
 
 def signal_1():
@@ -202,7 +202,8 @@ async def run():
     # ---
     # Frequencia de amostragem para o envio do sinal de controle
     freq_sp = 50.0 # Hz
-    t_sp = 1/freq_sp    
+    t_sp = 1/freq_sp
+    time_wait = 5.0 # segundos
     # ---
     # Duranção do sinal de controle
     t = 0.0
@@ -229,8 +230,8 @@ async def run():
       
     print("-- Go up at ", thrust*100, "% thrust")
     await drone.offboard.set_attitude(Attitude(roll, pitch, yaw, thrust))
-    await asyncio.sleep(5) # 2 seconds
-    
+    await asyncio.sleep(time_wait) # 2 seconds
+    await asyncio.
     print("-- Start sweep frequency signal at", thrust*100, "% thrust in roll")
     while t <= tf:
 

@@ -20,6 +20,7 @@ Código MAVSDK-python para implementar identificação de sistemas em SITL (soft
     * Sinal quadrado (rico em harmônicos),
     * Sinal triangular,
     * Sinal de varredura de frequência (frequency sweep).
+    * Sinal senoidal puro para baixas frequências
 
 2. O sinal é enviado via `MAVlink`, para o PX4 em SITL.
 
@@ -43,3 +44,12 @@ $$\dfrac{P(s)}{U(s)}=Ke^{-\tau s}\left(\dfrac{s+a}{s+b}\right)\left(\frac{1}{s}\
 
 11. O modelo foi validado com sucesso.
 
+---
+
+# ToDo
+Assume-se que o arquivo .ulog contem dados de teste de resposta em frequêcia para uma frequencia apenas.
+- [ ] (07/01/2025) Criar uma função para ler os dados de arquivo ulog que faça o seguinte:
+  - [ ] Determine o ganho de amplitude da relação p e torque.
+  - [ ] Determine a fase da relação p e torque.
+- [ ] Testar para todos os experimentos de resposta em freq.
+- [ ] Juntar com os dados obtidos a partir do sinal quadrado.
