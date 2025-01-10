@@ -46,10 +46,3 @@ $$\dfrac{P(s)}{U(s)}=Ke^{-\tau s}\left(\dfrac{s+a}{s+b}\right)\left(\frac{1}{s}\
 
 ---
 
-# ToDo
-Assume-se que o arquivo .ulog contem dados de teste de resposta em frequêcia para uma frequencia apenas.
-- [ ] (07/01/2025) Criar uma função para ler os dados de arquivo ulog que faça o seguinte:
-  - [ ] Determine o ganho de amplitude da relação p e torque.
-  - [ ] Determine a fase da relação p e torque.
-- [ ] Testar para todos os experimentos de resposta em freq.
-- [ ] Juntar com os dados obtidos a partir do sinal quadrado.
