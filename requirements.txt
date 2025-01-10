@@ -27,7 +27,7 @@ pexpect==4.9.0
 pillow==10.4.0
 platformdirs==4.3.6
 prompt_toolkit==3.0.48
-protobuf==3.20.1
+#protobuf==3.20.1
 psutil==6.0.0
 ptyprocess==0.7.0
 pure_eval==0.2.3
@@ -40,7 +40,7 @@ pyzmq==26.2.0
 scipy==1.14.1
 six==1.16.0
 stack-data==0.6.3
-tornado==6.4.1
+#tornado==6.4.1
 traitlets==5.14.3
 typing_extensions==4.12.2
 tzdata==2024.2
