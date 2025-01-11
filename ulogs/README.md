@@ -32,3 +32,11 @@ Para visualizar os dados online: https://logs.px4.io/
   * $\omega=1.6$ (rad/s)
   * $A=0.8$ (rad)
   * $N=4$ períodos do sinal. 
+* `log_0_2025-1-11-12-46-54.ulg` contem dados de entrada de **sinal senoidal**. Aplicado ao ângulo de rolagem $\phi(t)$.  Param: SDLOG_PROFILE=57.
+  * $\omega=1.6$ (rad/s)
+  * $A=1.0$ (rad)
+  * $N=4$ períodos do sinal.
+* `log_1_2025-1-11-14-07-26.ulg` contem dados de entrada de **sinal senoidal**. Aplicado ao ângulo de rolagem $\phi(t)$.  Param: SDLOG_PROFILE=57.
+  * $\omega=10.0$ (rad/s)
+  * $A=1.0$ (rad)
+  * $N=4$ períodos do sinal.

@@ -191,8 +191,8 @@ async def run():
     # Selecione aqui a função que será utilizada para gerar o sinal de controle
     # ---
     # O sinal
-    A = 0.8 # amplitude em rad
-    w0 = 1.6
+    A = 1.0 # amplitude em rad
+    w0 = 10.0
     f0 = w0/(2*np.pi)
     N = 4 # num de periodos
     #f0 = 0.01 # frequência em Hz
@@ -230,8 +230,8 @@ async def run():
       
     print("-- Go up at ", thrust*100, "% thrust")
     await drone.offboard.set_attitude(Attitude(roll, pitch, yaw, thrust))
-    await asyncio.sleep(time_wait) # 2 seconds
-    await asyncio.
+    await asyncio.sleep(time_wait) 
+
     print("-- Start sweep frequency signal at", thrust*100, "% thrust in roll")
     while t <= tf:
 

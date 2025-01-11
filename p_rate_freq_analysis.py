@@ -20,10 +20,12 @@ def main ():
     """
     # ulog_dados = [[path+file_name, w0, cutoff_freq_1, cutoff_freq_2],...]
     ulogs_dados = [
-        ['ulogs/log_0_2025-1-7-11-01-56.ulg', 0.1, 20*0.1/(2*np.pi), 15*0.1/(2*np.pi)],
-        ['ulogs/log_0_2025-1-7-11-27-03.ulg', 0.2, 20*0.2/(2*np.pi), 15*0.2/(2*np.pi)],
-        ['ulogs/log_0_2025-1-7-11-34-39.ulg', 0.4, 15*0.4/(2*np.pi), 15*0.4/(2*np.pi)],
-        ['ulogs/log_1_2025-1-7-11-39-49.ulg', 0.8, 15*0.8/(2*np.pi), 15*0.8/(2*np.pi)],
+        #['ulogs/log_0_2025-1-7-11-01-56.ulg', 0.1, 20*0.1/(2*np.pi), 15*0.1/(2*np.pi)],
+        #['ulogs/log_0_2025-1-7-11-27-03.ulg', 0.2, 20*0.2/(2*np.pi), 15*0.2/(2*np.pi)],
+        #['ulogs/log_0_2025-1-7-11-34-39.ulg', 0.4, 15*0.4/(2*np.pi), 15*0.4/(2*np.pi)],
+        #['ulogs/log_1_2025-1-7-11-39-49.ulg', 0.8, 15*0.8/(2*np.pi), 15*0.8/(2*np.pi)],
+        #['ulogs/log_0_2025-1-11-12-46-54.ulg', 1.6, 2.5 * 1.6 / (2 * np.pi), 2.5 * 1.6 / (2 * np.pi)],
+        ['ulogs/log_1_2025-1-11-14-07-26.ulg', 10.0, 100.0 * 10.0 / (2 * np.pi), 100.0 * 10.0 / (2 * np.pi)],
         #['ulogs/log_3_2025-1-7-11-46-35.ulg', 1.6, 2*1.6/(2*np.pi), 15*1.6/(2*np.pi)], # need to collect again with higher amplitud
     ]
 
@@ -57,8 +59,8 @@ def main ():
     
 
     # Salvar no arquivo txt
-    np.savetxt('dados/dados_p_sins.txt', np.column_stack(dados), header="w0, ganho_p_dB, fase",
-                fmt="%.6f")  # Ajuste 'fmt' para precisar do número de casas decimais desejado
+    #np.savetxt('dados/dados_p_sins.txt', np.column_stack(dados), header="w0, ganho_p_dB, fase",
+    #            fmt="%.6f")  # Ajuste 'fmt' para precisar do número de casas decimais desejado
     return
 
 if __name__ == "__main__":
