@@ -36,12 +36,12 @@ def main ():
         cutoff_freq_1 = ulogs_dados[i][2]
         cutoff_freq_2 = ulogs_dados[i][3]
         p_param = mf.Parametros(file_name,
-                             w0,
-                             cutoff_freq_1,
-                             cutoff_freq_2,
-                             10,
-                             True
-                             )
+                                w0,
+                                cutoff_freq_1,
+                                cutoff_freq_2,
+                                10,
+                                True
+                                )
         ganho_p_dB_i, fase_i = mf.analise_ulog(p_param)
         ganho_p_dB.append(ganho_p_dB_i)
         fase.append(fase_i)
@@ -49,9 +49,16 @@ def main ():
 
     dados = [w0s, ganho_p_dB, fase]
 
+    plt.semilogx(w0s, ganho_p_dB, 'o-')
+    plt.xlabel('Frequência [rad/s]')
+    plt.ylabel('Ganho [dB]')
+    plt.grid()
+    plt.show()
+    
+
     # Salvar no arquivo txt
     np.savetxt('dados/dados_p_sins.txt', np.column_stack(dados), header="w0, ganho_p_dB, fase",
-                   fmt="%.6f")  # Ajuste 'fmt' para precisar do número de casas decimais desejado
+                fmt="%.6f")  # Ajuste 'fmt' para precisar do número de casas decimais desejado
     return
 
 if __name__ == "__main__":
