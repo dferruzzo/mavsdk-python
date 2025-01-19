@@ -453,13 +453,20 @@ def fft_one_sided(t, y, plot=False, label='Magnitude'):
     freq_one_sided = freq[:len(freq)//2]
     
     if plot:
-        plt.figure(figsize=(10, 5))
+        plt.figure(figsize=(10, 10))
+        plt.subplot(2,1,1)
         plt.plot(freq_one_sided, np.abs(fft_y_one_sided), label=label)
         plt.xlabel('Frequency (Hz)')
         plt.ylabel('Magnitude')
         plt.title('One-Sided FFT')
         plt.legend()
         plt.grid()
+        plt.subplot(2,1,2)
+        plt.plot(freq_one_sided, np.unwrap(np.angle(fft_y_one_sided)), label=label)
+        plt.xlabel('Frequency (Hz)')
+        plt.ylabel('Phase (Radians)')
+        plt.grid()
+        plt.legend()
         plt.show()
         
     return freq_one_sided, fft_y_one_sided
