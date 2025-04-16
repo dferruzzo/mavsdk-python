@@ -191,13 +191,13 @@ async def run():
     # Selecione aqui a função que será utilizada para gerar o sinal de controle
     # ---
     # O sinal
-    A = 1.0 # amplitude em rad
-    w0 = 10.0
-    f0 = w0/(2*np.pi)
-    N = 4 # num de periodos
+    #A = 1.0 # amplitude em rad
+    #w0 = 10.0
+    #f0 = w0/(2*np.pi)
+    #N = 10 # num de periodos
     #f0 = 0.01 # frequência em Hz
-    delta_tone = one_single_tone_signal(A, f0, N)
-    #delta_tone = square_wave()
+    #delta_tone = one_single_tone_signal(A, f0, N)
+    delta_tone = square_wave()
     
     # ---
     # Frequencia de amostragem para o envio do sinal de controle
@@ -207,8 +207,8 @@ async def run():
     # ---
     # Duranção do sinal de controle
     t = 0.0
-    tf = N/f0 # tempo de duração do teste
-    # ---
+    #tf = N/f0 # tempo de duração do teste
+    tf = 40.0    # ---
     
     roll = 0.0
     pitch = 0.0
@@ -234,8 +234,9 @@ async def run():
 
     print("-- Start sweep frequency signal at", thrust*100, "% thrust in roll")
     while t <= tf:
-
-        roll = float(delta_tone(t))      
+        
+        #roll = float(delta_tone(t))      
+        pitch = float(delta_tone(t))      
         g = 9.81 # m/s^2
         m = 0.71/g # 0.5/9.81 = 0.051 kg # thrust = 0.73 N
         
