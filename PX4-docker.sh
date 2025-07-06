@@ -6,7 +6,7 @@
 # enable access to xhost from the container
 xhost +
 
-PX4_DIR=/home/diego/PX4-Autopilot # Change this to your PX4 directory
+PX4_DIR=${HOME}/PX4-Autopilot # Change this to your PX4 directory
 
 # Run docker
 docker run -it --rm --privileged \
